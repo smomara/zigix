@@ -3,7 +3,7 @@ const tty = @import("tty.zig");
 const vga = @import("vga.zig");
 
 fn sleep(ms: u64) void {
-    const iterations = ms * 100000; // Adjust this value based on your CPU speed
+    const iterations = ms * 100000;
     var i: u64 = 0;
     while (i < iterations) : (i += 1) {
         std.mem.doNotOptimizeAway(i);

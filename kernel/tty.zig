@@ -4,7 +4,7 @@ const vga = @import("vga.zig");
 var row: usize = 0;
 var column: usize = 0;
 var color: u8 = undefined;
-var buffer: [*]volatile u16 = @ptrFromInt(0xB8000);
+var buffer: [*]volatile u16 = @ptrFromInt(0xc00B8000);
 
 pub fn init() void {
     row = 0;
