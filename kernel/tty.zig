@@ -1,3 +1,4 @@
+const std = @import("std");
 const vga = @import("vga.zig");
 
 var row: usize = 0;
@@ -16,6 +17,8 @@ pub fn init() void {
             buffer[index] = vga.entry(' ', color);
         }
     }
+
+    std.debug.assert(row == 0 and column == 0);
 }
 
 pub fn set_color(c: u8) void {
@@ -23,6 +26,8 @@ pub fn set_color(c: u8) void {
 }
 
 fn put_entry_at(c: u8, col: u8, x: usize, y: usize) void {
+    std.debug.assert(x < vga.width);
+    std.debug.assert(y < vga.height);
     const index = y * vga.width + x;
     buffer[index] = vga.entry(c, col);
 }
@@ -32,7 +37,7 @@ fn putchar(c: u8) void {
         '\n' => newline(),
         '\r' => column = 0,
         '\t' => {
-            const tab_size = 4; // TODO:
+            const tab_size = 4;
             const spaces = tab_size - (column % tab_size);
             for (0..spaces) |_| {
                 put_entry_at(' ', color, column, row);
@@ -51,15 +56,20 @@ fn putchar(c: u8) void {
     if (column == vga.width) {
         newline();
     }
+
+    std.debug.assert(column < vga.width);
+    std.debug.assert(row < vga.height);
 }
 
 fn newline() void {
     column = 0;
-    if (row == vga.width - 1) {
+    if (row == vga.height - 1) {
         scroll();
     } else {
         row += 1;
     }
+    std.debug.assert(column == 0);
+    std.debug.assert(row < vga.height);
 }
 
 fn scroll() void {
@@ -74,6 +84,7 @@ fn scroll() void {
     for (0..vga.width) |x| {
         put_entry_at(' ', color, x, last_row);
     }
+    std.debug.assert(row == vga.height - 1);
 }
 
 pub fn write(data: []const u8) void {
