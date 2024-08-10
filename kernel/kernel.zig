@@ -1,81 +1,19 @@
 const std = @import("std");
-
-const VgaWidth = 80;
-const VgaHeight = 25;
-
-const VgaColor = enum {
-    black,
-    blue,
-    green,
-    cyan,
-    red,
-    magenta,
-    brown,
-    light_gray,
-    dark_gray,
-    light_blue,
-    light_green,
-    light_cyan,
-    light_red,
-    light_magenta,
-    light_brown,
-    white,
-};
-
-fn vga_entry_color(fg: VgaColor, bg: VgaColor) u8 {
-    return @as(u8, @intFromEnum(fg)) | (@as(u8, @intFromEnum(bg)) << 4);
-}
-
-fn vga_entry(uc: u8, color: u8) u16 {
-    return @as(u16, uc) | (@as(u16, color) << 8);
-}
-
-var terminal_row: usize = 0;
-var terminal_column: usize = 0;
-var terminal_color: u8 = undefined;
-var terminal_buffer: [*]volatile u16 = @ptrFromInt(0xB8000);
-
-fn terminal_init() void {
-    terminal_row = 0;
-    terminal_column = 0;
-    terminal_color = vga_entry_color(.black, .white);
-
-    for (0..VgaHeight) |y| {
-        for (0..VgaWidth) |x| {
-            const index = y * VgaWidth + x;
-            terminal_buffer[index] = vga_entry(' ', terminal_color);
-        }
-    }
-}
-
-fn terminal_set_color(color: u8) void {
-    terminal_color = color;
-}
-
-fn terminal_put_entry_at(c: u8, color: u8, x: usize, y: usize) void {
-    const index = y * VgaWidth + x;
-    terminal_buffer[index] = vga_entry(c, color);
-}
-
-fn terminal_putchar(c: u8) void {
-    terminal_put_entry_at(c, terminal_color, terminal_column, terminal_row);
-    terminal_column += 1;
-    if (terminal_column == VgaWidth) {
-        terminal_column = 0;
-        terminal_row += 1;
-        if (terminal_row == VgaHeight) {
-            terminal_row = 0;
-        }
-    }
-}
-
-fn terminal_write(data: []const u8) void {
-    for (data) |c| {
-        terminal_putchar(c);
-    }
-}
+const tty = @import("tty.zig");
+const vga = @import("vga.zig");
 
 export fn kernel_main() void {
-    terminal_init();
-    terminal_write("Welcome to ZigIX!\n");
+    tty.init();
+
+    tty.write("Hello, welcome to ZigIX!\n");
+    tty.write("This is a new line.\n");
+
+    tty.set_color(vga.entry_color(.green, .black));
+    tty.write("This text is green!\n");
+
+    tty.set_color(vga.entry_color(.cyan, .light_gray));
+    tty.write("Tabs:\t1\t2\t3\t4\n");
+
+    tty.set_color(vga.entry_color(.green, .black));
+    tty.write("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
 }
