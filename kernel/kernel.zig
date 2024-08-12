@@ -1,6 +1,6 @@
-const std = @import("std");
 const tty = @import("tty.zig");
 const vga = @import("vga.zig");
+const gdt = @import("gdt.zig");
 
 fn do_not_optimize(value: anytype) void {
     asm volatile (""
@@ -18,6 +18,7 @@ fn sleep(ms: u64) void {
 }
 export fn kernel_main() void {
     tty.init();
+    gdt.init();
 
     tty.write("Hello, welcome to ZigIX!\n");
     tty.write("This is a new line.\n");
