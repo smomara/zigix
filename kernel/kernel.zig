@@ -17,8 +17,8 @@ fn sleep(ms: u64) void {
     }
 }
 export fn kernel_main() void {
-    tty.init();
     gdt.init();
+    tty.init();
 
     tty.write("Hello, welcome to ZigIX!\n");
     tty.write("This is a new line.\n");
