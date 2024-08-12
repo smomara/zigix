@@ -2,14 +2,20 @@ const std = @import("std");
 const tty = @import("tty.zig");
 const vga = @import("vga.zig");
 
+fn do_not_optimize(value: anytype) void {
+    asm volatile (""
+        :
+        : [value] "r" (value),
+    );
+}
+
 fn sleep(ms: u64) void {
     const iterations = ms * 100000;
     var i: u64 = 0;
     while (i < iterations) : (i += 1) {
-        std.mem.doNotOptimizeAway(i);
+        do_not_optimize(i);
     }
 }
-
 export fn kernel_main() void {
     tty.init();
 
