@@ -1,14 +1,18 @@
 const tty = @import("tty.zig");
 const vga = @import("vga.zig");
 const gdt = @import("gdt.zig");
-//const idt = @import("idt.zig");
+const idt = @import("idt.zig");
+const pic = @import("pic.zig");
 
 const lib = @import("lib.zig");
 
 export fn kernel_main() void {
+    // initialize and enable interrupts
     gdt.init();
-    //idt.init();
+    idt.init();
+    pic.init();
     tty.init();
+    asm volatile ("sti");
 
     lib.print("Hello, welcome to ZigIX!\n");
     lib.print("This is a new line.\n");
