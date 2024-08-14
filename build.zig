@@ -30,6 +30,7 @@ pub fn build(b: *std.Build) void {
         "qemu-system-i386",
         "-kernel",
         "./zig-out/bin/zigix",
+        "-no-reboot",
     });
     run_cmd.step.dependOn(b.getInstallStep());
 
