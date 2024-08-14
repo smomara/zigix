@@ -3,11 +3,11 @@ const boot = @import("boot.zig");
 
 const GDT_ENTRIES = 6; // null, kernel code, kernel data, user code, user data, tss
 
-const KERNEL_CODE_SELECTOR = 1 * @sizeOf(Entry);
-const KERNEL_DATA_SELECTOR = 2 * @sizeOf(Entry);
-const USER_CODE_SELECTOR = 3 * @sizeOf(Entry) | 3; // RPL 3
-const USER_DATA_SELECTOR = 4 * @sizeOf(Entry) | 3; // RPL 3
-const TSS_SELECTOR = 5 * @sizeOf(Entry);
+pub const KERNEL_CODE_SELECTOR = 1 * @sizeOf(Entry);
+pub const KERNEL_DATA_SELECTOR = 2 * @sizeOf(Entry);
+pub const USER_CODE_SELECTOR = 3 * @sizeOf(Entry) | 3; // RPL 3
+pub const USER_DATA_SELECTOR = 4 * @sizeOf(Entry) | 3; // RPL 3
+pub const TSS_SELECTOR = 5 * @sizeOf(Entry);
 
 // Access byte flags
 const PRESENT = 1 << 7;

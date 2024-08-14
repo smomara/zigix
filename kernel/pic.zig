@@ -5,6 +5,8 @@ const PIC1_DATA = PIC1 + 1;
 const PIC2_COMMAND = PIC2;
 const PIC2_DATA = PIC2 + 1;
 
+const PIC_EOI = 0x20; // End-of-interrupt command code
+
 // ICW1 control words
 const ICW1_ICW4 = 0x01; // Indicates that ICW4 will be present
 const ICW1_SINGLE = 0x02; // Single (cascade) mode
@@ -18,6 +20,9 @@ const ICW4_AUTO = 0x02; // Auto (normal) EOI
 const ICW4_BUF_SLAVE = 0x08; // Buffered mode/slave
 const ICW4_BUF_MASTER = 0x0C; // Buffered mode/master
 const ICW4_SFNM = 0x10; // Special fully nested (not)
+
+const PIC_READ_IRR = 0x0a; // OCW3 irq ready next CMD read
+const PIC_READ_ISR = 0x0b; // OCW3 irq service next CMD read
 
 pub fn init() void {
     const offset1 = 0x20; // Master PIC vector offset
@@ -57,7 +62,45 @@ pub fn init() void {
     outb(PIC2_DATA, a2);
 }
 
-fn outb(port: u16, value: u8) void {
+pub fn send_eoi(irq: u8) void {
+    if (irq >= 8) {
+        outb(PIC2_COMMAND, PIC_EOI);
+    }
+    outb(PIC1_COMMAND, PIC_EOI);
+}
+
+pub fn disable() void {
+    outb(PIC1_DATA, 0xff);
+    outb(PIC2_DATA, 0xff);
+}
+
+pub fn set_mask(irq_line: u8) void {
+    const port = if (irq_line < 8) PIC1_DATA else PIC2_DATA;
+    const value = inb(port) | (@as(u8, 1) << @intCast(if (irq_line >= 8) irq_line - 8 else irq_line));
+    outb(port, value);
+}
+
+pub fn clear_mask(irq_line: u8) void {
+    const port = if (irq_line < 8) PIC1_DATA else PIC2_DATA;
+    const value = inb(port) & ~(@as(u8, 1) << @intCast(if (irq_line >= 8) irq_line - 8 else irq_line));
+    outb(port, value);
+}
+
+fn get_irq_reg(ocw3: u8) u16 {
+    outb(PIC1_COMMAND, ocw3);
+    outb(PIC2_COMMAND, ocw3);
+    return (@as(u16, inb(PIC2_COMMAND)) << 8) | inb(PIC1_COMMAND);
+}
+
+pub fn get_irr() u16 {
+    return get_irq_reg(PIC_READ_IRR);
+}
+
+pub fn get_isr() u16 {
+    return get_irq_reg(PIC_READ_ISR);
+}
+
+pub fn outb(port: u16, value: u8) void {
     asm volatile ("outb %[value], %[port]"
         :
         : [value] "{al}" (value),
@@ -65,7 +108,7 @@ fn outb(port: u16, value: u8) void {
     );
 }
 
-fn inb(port: u16) u8 {
+pub fn inb(port: u16) u8 {
     return asm volatile ("inb %[port], %[ret]"
         : [ret] "={al}" (-> u8),
         : [port] "N{dx}" (port),

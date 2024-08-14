@@ -1,4 +1,6 @@
 const lib = @import("lib.zig");
+const gdt = @import("gdt.zig");
+const KERNEL_CODE_SELECTOR = gdt.KERNEL_CODE_SELECTOR;
 
 const IDT_ENTRIES = 256;
 
@@ -36,38 +38,38 @@ pub fn init() void {
         entry.* = Entry.init(0, 0, 0);
     }
 
-    set_idt_gate(0, divide_error_handler, TRAP_GATE, 0);
-    set_idt_gate(1, debug_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(2, nmi_handler, INTERRUPT_GATE, 0);
-    set_idt_gate(3, breakpoint_handler, TRAP_GATE, 3);
-    set_idt_gate(4, overflow_handler, TRAP_GATE, 0);
-    set_idt_gate(5, bound_range_exceeded_handler, TRAP_GATE, 0);
-    set_idt_gate(6, invalid_opcode_handler, TRAP_GATE, 0);
-    set_idt_gate(7, device_not_available_handler, TRAP_GATE, 0);
-    set_idt_gate(8, double_fault_handler, TRAP_GATE, 0);
-    set_idt_gate(9, coprocessor_segment_overrun_handler, TRAP_GATE, 0);
-    set_idt_gate(10, invalid_tss_handler, TRAP_GATE, 0);
-    set_idt_gate(11, segment_not_present_handler, TRAP_GATE, 0);
-    set_idt_gate(12, stack_segment_fault_handler, TRAP_GATE, 0);
-    set_idt_gate(13, general_protection_fault_handler, TRAP_GATE, 0);
-    set_idt_gate(14, page_fault_handler, TRAP_GATE, 0);
-    set_idt_gate(15, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(16, x87_floating_point_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(17, alignment_check_handler, TRAP_GATE, 0);
-    set_idt_gate(18, machine_check_handler, TRAP_GATE, 0);
-    set_idt_gate(19, simd_floating_point_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(20, virtualization_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(21, control_protection_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(22, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(23, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(24, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(25, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(26, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(27, reserved_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(28, hypervisor_injection_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(29, vmm_communication_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(30, security_exception_handler, TRAP_GATE, 0);
-    set_idt_gate(31, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(0, divide_error_handler, TRAP_GATE, 0);
+    set_gate(1, debug_exception_handler, TRAP_GATE, 0);
+    set_gate(2, nmi_handler, INTERRUPT_GATE, 0);
+    set_gate(3, breakpoint_handler, TRAP_GATE, 3);
+    set_gate(4, overflow_handler, TRAP_GATE, 0);
+    set_gate(5, bound_range_exceeded_handler, TRAP_GATE, 0);
+    set_gate(6, invalid_opcode_handler, TRAP_GATE, 0);
+    set_gate(7, device_not_available_handler, TRAP_GATE, 0);
+    set_gate(8, double_fault_handler, TRAP_GATE, 0);
+    set_gate(9, coprocessor_segment_overrun_handler, TRAP_GATE, 0);
+    set_gate(10, invalid_tss_handler, TRAP_GATE, 0);
+    set_gate(11, segment_not_present_handler, TRAP_GATE, 0);
+    set_gate(12, stack_segment_fault_handler, TRAP_GATE, 0);
+    set_gate(13, general_protection_fault_handler, TRAP_GATE, 0);
+    set_gate(14, page_fault_handler, TRAP_GATE, 0);
+    set_gate(15, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(16, x87_floating_point_exception_handler, TRAP_GATE, 0);
+    set_gate(17, alignment_check_handler, TRAP_GATE, 0);
+    set_gate(18, machine_check_handler, TRAP_GATE, 0);
+    set_gate(19, simd_floating_point_exception_handler, TRAP_GATE, 0);
+    set_gate(20, virtualization_exception_handler, TRAP_GATE, 0);
+    set_gate(21, control_protection_exception_handler, TRAP_GATE, 0);
+    set_gate(22, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(23, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(24, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(25, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(26, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(27, reserved_exception_handler, TRAP_GATE, 0);
+    set_gate(28, hypervisor_injection_exception_handler, TRAP_GATE, 0);
+    set_gate(29, vmm_communication_exception_handler, TRAP_GATE, 0);
+    set_gate(30, security_exception_handler, TRAP_GATE, 0);
+    set_gate(31, reserved_exception_handler, TRAP_GATE, 0);
 
     const idtr = Pointer{
         .limit = @sizeOf(@TypeOf(idt)) - 1,
@@ -79,9 +81,9 @@ pub fn init() void {
     );
 }
 
-fn set_idt_gate(n: u8, handler: *const fn () callconv(.Interrupt) void, gate_type: u8, dpl: u2) void {
+pub fn set_gate(n: u8, handler: *const fn () callconv(.Interrupt) void, gate_type: u8, dpl: u2) void {
     const addr = @intFromPtr(handler);
-    idt[n] = Entry.init(addr, 0x08, gate_type | (@as(u8, dpl) << 5));
+    idt[n] = Entry.init(addr, KERNEL_CODE_SELECTOR, gate_type | (@as(u8, dpl) << 5));
 }
 
 fn divide_error_handler() callconv(.Interrupt) void {

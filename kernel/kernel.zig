@@ -3,6 +3,7 @@ const vga = @import("vga.zig");
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
 const pic = @import("pic.zig");
+const pit = @import("pit.zig");
 
 const lib = @import("lib.zig");
 
@@ -11,6 +12,7 @@ export fn kernel_main() void {
     gdt.init();
     idt.init();
     pic.init();
+    // pit.init();
     tty.init();
     asm volatile ("sti");
 
@@ -28,7 +30,7 @@ export fn kernel_main() void {
 
     tty.set_color(vga.entry_color(.blue, .white));
     for (0..30) |_| {
-        // lib.sleep(50);
+        // lib.sleep(1);
         lib.print("lol\n");
     }
     lib.print("works!\n");
