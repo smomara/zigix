@@ -33,7 +33,18 @@ pub fn build(b: *std.Build) void {
         "-no-reboot",
     });
     run_cmd.step.dependOn(b.getInstallStep());
-
     const run_step = b.step("run", "Run the kernel in QEMU");
     run_step.dependOn(&run_cmd.step);
+
+    const debug_cmd = b.addSystemCommand(&[_][]const u8{
+        "qemu-system-i386",
+        "-kernel",
+        "./zig-out/bin/zigix",
+        "-no-reboot",
+        "-s",
+        "-S",
+    });
+    debug_cmd.step.dependOn(b.getInstallStep());
+    const debug_step = b.step("debug", "Run the kernel in QEMU with GDB server enabled");
+    debug_step.dependOn(&debug_cmd.step);
 }
